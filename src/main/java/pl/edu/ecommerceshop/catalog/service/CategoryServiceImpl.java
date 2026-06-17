@@ -1,6 +1,9 @@
 package pl.edu.ecommerceshop.catalog.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.edu.ecommerceshop.catalog.dto.CategoryPatchRequest;
@@ -13,6 +16,10 @@ import pl.edu.ecommerceshop.common.exception.ResourceNotFoundException;
 
 import java.util.List;
 
+import static pl.edu.ecommerceshop.config.RedisCacheConfig.CATEGORIES_CACHE;
+import static pl.edu.ecommerceshop.config.RedisCacheConfig.PRODUCTS_CACHE;
+import static pl.edu.ecommerceshop.config.RedisCacheConfig.PRODUCT_CACHE;
+
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
@@ -21,6 +28,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Transactional(readOnly = true)
     @Override
+    @Cacheable(cacheNames = CATEGORIES_CACHE, key = "'all'")
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll().stream()
                 .map(CatalogMapper::mapToCategoryResponse)
@@ -29,6 +37,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Transactional
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CATEGORIES_CACHE, allEntries = true),
+            @CacheEvict(cacheNames = PRODUCTS_CACHE, allEntries = true),
+            @CacheEvict(cacheNames = PRODUCT_CACHE, allEntries = true)
+    })
     public CategoryResponse createCategory(CategoryRequest request) {
         validateUniqueness(request.name(), request.slug(), null);
         Category category = new Category(request.name(), request.slug());
@@ -37,6 +50,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Transactional
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CATEGORIES_CACHE, allEntries = true),
+            @CacheEvict(cacheNames = PRODUCTS_CACHE, allEntries = true),
+            @CacheEvict(cacheNames = PRODUCT_CACHE, allEntries = true)
+    })
     public CategoryResponse updateCategory(Long id, CategoryRequest request) {
         Category category = getCategory(id);
         validateUniqueness(request.name(), request.slug(), category);
@@ -53,6 +71,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Transactional
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CATEGORIES_CACHE, allEntries = true),
+            @CacheEvict(cacheNames = PRODUCTS_CACHE, allEntries = true),
+            @CacheEvict(cacheNames = PRODUCT_CACHE, allEntries = true)
+    })
     public CategoryResponse partialUpdateCategory(Long id, CategoryPatchRequest request) {
         Category category = getCategory(id);
 
@@ -96,5 +119,4 @@ public class CategoryServiceImpl implements CategoryService {
             throw new BusinessException("Category slug already exists.");
         }
     }
-
 }

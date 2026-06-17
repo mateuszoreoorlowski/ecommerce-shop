@@ -16,5 +16,20 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: shopflow-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "63793:6379"
+    volumes:
+      - shopflow-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   shopflow-postgres-data:
+  shopflow-redis-data:

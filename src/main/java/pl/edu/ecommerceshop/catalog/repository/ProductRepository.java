@@ -40,10 +40,11 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                     SELECT p
                     FROM Product p
                     JOIN FETCH p.category c
-                    WHERE (:query IS NULL
-                           OR LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%'))
-                           OR LOWER(p.description) LIKE LOWER(CONCAT('%', :query, '%'))
-                           OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :query, '%')))
+                    WHERE (
+                            LOWER(p.name) LIKE :queryPattern
+                            OR LOWER(p.description) LIKE :queryPattern
+                            OR LOWER(p.sku) LIKE :queryPattern
+                          )
                       AND (:categorySlug IS NULL OR c.slug = :categorySlug)
                       AND (:active IS NULL OR p.active = :active)
                     """,
@@ -51,16 +52,17 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                     SELECT COUNT(p)
                     FROM Product p
                     JOIN p.category c
-                    WHERE (:query IS NULL
-                           OR LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%'))
-                           OR LOWER(p.description) LIKE LOWER(CONCAT('%', :query, '%'))
-                           OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :query, '%')))
+                    WHERE (
+                            LOWER(p.name) LIKE :queryPattern
+                            OR LOWER(p.description) LIKE :queryPattern
+                            OR LOWER(p.sku) LIKE :queryPattern
+                          )
                       AND (:categorySlug IS NULL OR c.slug = :categorySlug)
                       AND (:active IS NULL OR p.active = :active)
                     """
     )
     Page<Product> searchProducts(
-            @Param("query") String query,
+            @Param("queryPattern") String queryPattern,
             @Param("categorySlug") String categorySlug,
             @Param("active") Boolean active,
             Pageable pageable

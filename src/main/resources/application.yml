@@ -23,9 +23,25 @@ spring:
     locations: classpath:db/migration
     group: true
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:63793}
+      password: "${REDIS_PASSWORD:}"
+      timeout: 2s
+
+  cache:
+    type: redis
+    redis:
+      key-prefix: "shopflow:"
+      use-key-prefix: true
+      cache-null-values: false
+      time-to-live: 10m
+
   threads:
     virtual:
       enabled: true
+
   web:
     error:
       include-message: never
