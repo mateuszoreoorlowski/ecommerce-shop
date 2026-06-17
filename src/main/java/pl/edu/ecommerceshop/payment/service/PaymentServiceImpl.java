@@ -33,7 +33,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     @Override
     public PaymentResponse processMockPayment(MockPaymentRequest request) {
-        Order order = orderRepository.findById(request.orderId())
+        Order order = orderRepository.findByIdWithItems(request.orderId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Order with id %d not found.".formatted(request.orderId())
                 ));
@@ -49,7 +49,7 @@ public class PaymentServiceImpl implements PaymentService {
             throw new BusinessException("Payment is already paid.");
         }
 
-        if (request.success()) {
+        if (Boolean.TRUE.equals(request.success())) {
             commitReservedItems(order);
 
             payment.markPaid("mock_" + UUID.randomUUID());

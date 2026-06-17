@@ -2,7 +2,6 @@ package pl.edu.ecommerceshop.order.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 import pl.edu.ecommerceshop.common.exception.BusinessException;
 import pl.edu.ecommerceshop.payment.model.PaymentStatus;
 
@@ -15,7 +14,6 @@ import java.util.Set;
 
 @Entity
 @Getter
-@Setter
 @Table(name = "orders")
 public class Order {
 
@@ -106,7 +104,7 @@ public class Order {
         }
 
         items.add(item);
-        item.setOrder(this);
+        item.assignToOrder(this);
         recalculateTotal();
     }
 
@@ -116,7 +114,7 @@ public class Order {
         }
 
         items.remove(item);
-        item.setOrder(null);
+        item.detachFromOrder();
         recalculateTotal();
     }
 
@@ -152,26 +150,32 @@ public class Order {
 
     public void cancelAfterFailedPayment() {
         markPaymentFailed();
-
         this.status = OrderStatus.CANCELLED;
         this.cancelledAt = Instant.now();
     }
 
-    public void cancel() {
-        if (isClosed()) {
-            throw new BusinessException("Closed order cannot be cancelled.");
-        }
+    public void cancelUnpaid() {
+        ensureCanBeCancelled();
 
-        if (status == OrderStatus.SHIPPED || status == OrderStatus.DELIVERED || status == OrderStatus.COMPLETED) {
-            throw new BusinessException("Shipped, delivered or completed order cannot be cancelled directly.");
+        if (paymentStatus == PaymentStatus.PAID || paymentStatus == PaymentStatus.REFUND_PENDING || paymentStatus == PaymentStatus.REFUNDED) {
+            throw new BusinessException("Paid order must be cancelled through refund flow.");
         }
 
         this.status = OrderStatus.CANCELLED;
         this.cancelledAt = Instant.now();
+        this.paymentStatus = PaymentStatus.CANCELLED;
+    }
 
-        if (paymentStatus == PaymentStatus.PENDING || paymentStatus == PaymentStatus.FAILED) {
-            this.paymentStatus = PaymentStatus.CANCELLED;
+    public void cancelPaidAndStartRefund() {
+        ensureCanBeCancelled();
+
+        if (paymentStatus != PaymentStatus.PAID) {
+            throw new BusinessException("Only paid orders can start refund cancellation flow.");
         }
+
+        this.status = OrderStatus.CANCELLED;
+        this.cancelledAt = Instant.now();
+        this.paymentStatus = PaymentStatus.REFUND_PENDING;
     }
 
     public void changeStatus(OrderStatus newStatus) {
@@ -183,9 +187,8 @@ public class Order {
             throw new BusinessException("Order cannot be changed back to NEW.");
         }
 
-        if (newStatus == OrderStatus.CANCELLED) {
-            cancel();
-            return;
+        if (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.REFUNDED) {
+            throw new BusinessException("Use the dedicated cancellation or refund flow for this status.");
         }
 
         if (newStatus == OrderStatus.RETURN_REQUESTED) {
@@ -195,11 +198,6 @@ public class Order {
 
         if (newStatus == OrderStatus.RETURNED) {
             markReturned();
-            return;
-        }
-
-        if (newStatus == OrderStatus.REFUNDED) {
-            markRefunded();
             return;
         }
 
@@ -239,8 +237,23 @@ public class Order {
             throw new BusinessException("Only returned or cancelled orders can be marked as refunded.");
         }
 
+        if (paymentStatus != PaymentStatus.PAID && paymentStatus != PaymentStatus.REFUND_PENDING) {
+            throw new BusinessException("Only paid or refund pending orders can be marked as refunded.");
+        }
+
         this.paymentStatus = PaymentStatus.REFUNDED;
         this.status = OrderStatus.REFUNDED;
+    }
+
+    private void ensureCanBeCancelled() {
+        if (isClosed()) {
+            throw new BusinessException("Closed order cannot be cancelled.");
+        }
+
+        if (status == OrderStatus.SHIPPED || status == OrderStatus.DELIVERED || status == OrderStatus.COMPLETED
+                || status == OrderStatus.RETURN_REQUESTED || status == OrderStatus.RETURNED) {
+            throw new BusinessException("Shipped, delivered, completed or returned order cannot be cancelled directly.");
+        }
     }
 
     private boolean requiresPaidOrder(OrderStatus newStatus) {

@@ -37,7 +37,7 @@ public class CategoryController {
     @PatchMapping("/{id}")
     public CategoryResponse partialUpdate(
             @PathVariable Long id,
-            @RequestBody CategoryPatchRequest request
+            @Valid @RequestBody CategoryPatchRequest request
     ) {
         return categoryService.partialUpdateCategory(id, request);
     }

@@ -3,7 +3,6 @@ package pl.edu.ecommerceshop.catalog.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.edu.ecommerceshop.catalog.dto.ProductCreateRequest;
@@ -32,22 +31,13 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     @Override
     public PageResponse<ProductResponse> getProductsList(String query, String categorySlug, Boolean active, Pageable pageable) {
-        Specification<Product> specification = (_, _, cb) -> cb.conjunction();
-        if (query != null && !query.isBlank()) {
-            String pattern = "%" + query.toLowerCase() + "%";
-            specification = specification.and((root, _, cb) -> cb.or(
-                    cb.like(cb.lower(root.get("name")), pattern),
-                    cb.like(cb.lower(root.get("description")), pattern),
-                    cb.like(cb.lower(root.get("sku")), pattern)
-            ));
-        }
-        if (categorySlug != null && !categorySlug.isBlank()) {
-            specification = specification.and((root, _, cb) -> cb.equal(root.get("category").get("slug"), categorySlug));
-        }
-        if (active != null) {
-            specification = specification.and((root, _, cb) -> cb.equal(root.get("active"), active));
-        }
-        Page<ProductResponse> page = productRepository.findAll(specification, pageable).map(CatalogMapper::mapToProductResponse);
+        Page<ProductResponse> page = productRepository.searchProducts(
+                        normalizeOptional(query),
+                        normalizeOptional(categorySlug),
+                        active,
+                        pageable
+                )
+                .map(CatalogMapper::mapToProductResponse);
         return PageResponse.from(page);
     }
 
@@ -101,7 +91,13 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     @Override
     public Product findProduct(Long id) {
-        return productRepository.findById(id)
+        return productRepository.findByIdWithCategory(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product with id %d not found.".formatted(id)));
+    }
+
+    private String normalizeOptional(String value) {
+        return value == null || value.isBlank()
+                ? null
+                : value.trim();
     }
 }

@@ -2,6 +2,7 @@ package pl.edu.ecommerceshop.order.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,8 +25,12 @@ import pl.edu.ecommerceshop.order.model.Order;
 import pl.edu.ecommerceshop.order.model.OrderItem;
 import pl.edu.ecommerceshop.order.model.OrderStatus;
 import pl.edu.ecommerceshop.order.repository.OrderRepository;
+import pl.edu.ecommerceshop.payment.model.Payment;
+import pl.edu.ecommerceshop.payment.model.PaymentStatus;
+import pl.edu.ecommerceshop.payment.repository.PaymentRepository;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -35,6 +40,7 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
     private final ProductRepository productRepository;
     private final StockMovementRepository stockMovementRepository;
     private final CartService cartService;
@@ -84,9 +90,21 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     @Override
     public PageResponse<OrderResponse> getOrdersList(OrderStatus status, Pageable pageable) {
-        Page<OrderResponse> page = status == null
-                ? orderRepository.findAll(pageable).map(OrderMapper::mapToOrderResponse)
-                : orderRepository.findByStatus(status, pageable).map(OrderMapper::mapToOrderResponse);
+        Page<Long> orderIdsPage = orderRepository.findIdsByStatus(status, pageable);
+        if (orderIdsPage.isEmpty()) {
+            Page<OrderResponse> emptyPage = Page.empty(pageable);
+            return PageResponse.from(emptyPage);
+        }
+
+        Map<Long, Order> ordersById = orderRepository.findAllWithItemsByIdIn(orderIdsPage.getContent()).stream()
+                .collect(Collectors.toMap(Order::getId, Function.identity()));
+
+        List<OrderResponse> content = orderIdsPage.getContent().stream()
+                .map(ordersById::get)
+                .map(OrderMapper::mapToOrderResponse)
+                .toList();
+
+        Page<OrderResponse> page = new PageImpl<>(content, pageable, orderIdsPage.getTotalElements());
         return PageResponse.from(page);
     }
 
@@ -100,6 +118,65 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderResponse cancelOrder(Long id) {
         Order order = findOrder(id);
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            cancelPaidOrderAndRefund(order);
+        } else {
+            cancelUnpaidOrder(order);
+        }
+        return OrderMapper.mapToOrderResponse(order);
+    }
+
+    @Transactional
+    @Override
+    public OrderResponse changeStatus(Long id, ChangeOrderStatusRequest request) {
+        if (request.status() == OrderStatus.CANCELLED) {
+            return cancelOrder(id);
+        }
+
+        Order order = findOrder(id);
+        if (request.status() == OrderStatus.REFUNDED) {
+            refundOrder(order);
+        } else {
+            order.changeStatus(request.status());
+        }
+        return OrderMapper.mapToOrderResponse(order);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Order findOrder(Long id) {
+        return orderRepository.findByIdWithItems(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order with id %d not found.".formatted(id)));
+    }
+
+    private void cancelUnpaidOrder(Order order) {
+        releaseReservedItems(order);
+
+        paymentRepository.findByOrderId(order.getId())
+                .filter(payment -> payment.getStatus() == PaymentStatus.PENDING || payment.getStatus() == PaymentStatus.AUTHORIZED)
+                .ifPresent(Payment::cancel);
+
+        order.cancelUnpaid();
+    }
+
+    private void cancelPaidOrderAndRefund(Order order) {
+        order.cancelPaidAndStartRefund();
+        restoreCommittedItems(order);
+        refundOrder(order);
+    }
+
+    private void refundOrder(Order order) {
+        Payment payment = paymentRepository.findByOrderId(order.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Payment for order id %d not found.".formatted(order.getId())));
+
+        if (payment.getStatus() == PaymentStatus.PAID) {
+            payment.startRefund();
+        }
+        payment.markRefunded();
+        order.markRefunded();
+    }
+
+    private void releaseReservedItems(Order order) {
         order.getItems().forEach(item -> {
             Product product = productRepository.findByIdForUpdate(item.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product with id %d not found.".formatted(item.getProductId())));
@@ -107,22 +184,15 @@ public class OrderServiceImpl implements OrderService {
             stockMovementRepository.save(new StockMovement(product.getId(), product.getSku(), StockMovementType.RESERVATION_RELEASED,
                     item.getQuantity(), "Reservation released after order cancellation", order.getOrderNumber()));
         });
-        order.cancel();
-        return OrderMapper.mapToOrderResponse(order);
     }
 
-    @Transactional
-    @Override
-    public OrderResponse changeStatus(Long id, ChangeOrderStatusRequest request) {
-        Order order = findOrder(id);
-        order.changeStatus(request.status());
-        return OrderMapper.mapToOrderResponse(order);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public Order findOrder(Long id) {
-        return orderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Order with id %d not found.".formatted(id)));
+    private void restoreCommittedItems(Order order) {
+        order.getItems().forEach(item -> {
+            Product product = productRepository.findByIdForUpdate(item.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product with id %d not found.".formatted(item.getProductId())));
+            product.restoreStockAfterCancellationOrReturn(item.getQuantity());
+            stockMovementRepository.save(new StockMovement(product.getId(), product.getSku(), StockMovementType.RETURN_RECEIVED,
+                    item.getQuantity(), "Stock restored after paid order cancellation", order.getOrderNumber()));
+        });
     }
 }

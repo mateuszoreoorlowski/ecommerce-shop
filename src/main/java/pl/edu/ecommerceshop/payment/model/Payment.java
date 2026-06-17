@@ -2,7 +2,6 @@ package pl.edu.ecommerceshop.payment.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 import pl.edu.ecommerceshop.common.exception.BusinessException;
 import pl.edu.ecommerceshop.order.model.Order;
 
@@ -11,7 +10,6 @@ import java.time.Instant;
 
 @Entity
 @Getter
-@Setter
 @Table(name = "payments")
 public class Payment {
 

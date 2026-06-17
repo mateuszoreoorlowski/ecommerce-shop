@@ -66,14 +66,14 @@ public class CartServiceImpl implements CartService {
     @Transactional(readOnly = true)
     @Override
     public Cart findActiveCart(Long id) {
-        return cartRepository.findByIdAndStatus(id, CartStatus.ACTIVE)
+        return cartRepository.findByIdAndStatusWithItemsAndProducts(id, CartStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Active cart with id %d not found.".formatted(id)));
     }
 
     @Transactional(readOnly = true)
     @Override
     public Cart findCart(Long id) {
-        return cartRepository.findById(id)
+        return cartRepository.findByIdWithItemsAndProducts(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart with id %d not found.".formatted(id)));
     }
 }

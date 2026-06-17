@@ -2,14 +2,12 @@ package pl.edu.ecommerceshop.inventory.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 import pl.edu.ecommerceshop.common.exception.BusinessException;
 
 import java.time.Instant;
 
 @Entity
 @Getter
-@Setter
 @Table(name = "stock_movements")
 public class StockMovement {
 

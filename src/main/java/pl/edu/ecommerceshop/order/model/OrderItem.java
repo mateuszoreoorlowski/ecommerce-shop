@@ -2,13 +2,12 @@ package pl.edu.ecommerceshop.order.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
+import pl.edu.ecommerceshop.common.exception.BusinessException;
 
 import java.math.BigDecimal;
 
 @Entity
 @Getter
-@Setter
 @Table(name = "order_items")
 public class OrderItem {
 
@@ -42,6 +41,12 @@ public class OrderItem {
     }
 
     public OrderItem(Order order, Long productId, String productSku, String productName, int quantity, BigDecimal unitPrice) {
+        if (quantity <= 0) {
+            throw new BusinessException("Order item quantity must be positive.");
+        }
+        if (unitPrice == null || unitPrice.signum() <= 0) {
+            throw new BusinessException("Order item unit price must be greater than zero.");
+        }
         this.order = order;
         this.productId = productId;
         this.productSku = productSku;
@@ -49,6 +54,14 @@ public class OrderItem {
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.lineTotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
+    }
+
+    void assignToOrder(Order order) {
+        this.order = order;
+    }
+
+    void detachFromOrder() {
+        this.order = null;
     }
 
     public BigDecimal lineTotal() {

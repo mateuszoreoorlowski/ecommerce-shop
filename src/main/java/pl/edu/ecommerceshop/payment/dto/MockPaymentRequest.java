@@ -6,6 +6,7 @@ public record MockPaymentRequest(
         @NotNull
         Long orderId,
 
-        boolean success
+        @NotNull
+        Boolean success
 ) {
 }

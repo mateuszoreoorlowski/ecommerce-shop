@@ -2,7 +2,6 @@ package pl.edu.ecommerceshop.catalog.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 import pl.edu.ecommerceshop.common.exception.BusinessException;
 
 import java.math.BigDecimal;
@@ -10,7 +9,6 @@ import java.time.Instant;
 
 @Entity
 @Getter
-@Setter
 @Table(name = "products")
 public class Product {
 
@@ -60,6 +58,9 @@ public class Product {
         if (stockQuantity < 0) {
             throw new BusinessException("Initial stock cannot be negative.");
         }
+        if (category == null) {
+            throw new BusinessException("Product category cannot be null.");
+        }
         this.sku = sku;
         this.name = name;
         this.description = description;
@@ -105,6 +106,10 @@ public class Product {
             throw new BusinessException("Received stock quantity must be positive.");
         }
         this.stockQuantity += quantity;
+    }
+
+    public void restoreStockAfterCancellationOrReturn(int quantity) {
+        receiveStock(quantity);
     }
 
     public void reserve(int quantity) {

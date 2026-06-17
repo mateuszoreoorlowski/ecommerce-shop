@@ -2,7 +2,6 @@ package pl.edu.ecommerceshop.cart.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 import pl.edu.ecommerceshop.catalog.model.Product;
 import pl.edu.ecommerceshop.common.exception.BusinessException;
 
@@ -13,7 +12,6 @@ import java.util.Optional;
 
 @Entity
 @Getter
-@Setter
 @Table(name = "carts")
 public class Cart {
 
@@ -59,6 +57,9 @@ public class Cart {
 
     public void addItem(Product product, int quantity) {
         ensureActive();
+        if (product == null) {
+            throw new BusinessException("Product cannot be null.");
+        }
         if (quantity <= 0) {
             throw new BusinessException("Cart item quantity must be positive.");
         }
@@ -83,10 +84,12 @@ public class Cart {
 
     public void removeItem(Long itemId) {
         ensureActive();
-        boolean removed = items.removeIf(item -> item.getId().equals(itemId));
-        if (!removed) {
-            throw new BusinessException("Cart item not found in this cart.");
-        }
+        CartItem item = items.stream()
+                .filter(cartItem -> cartItem.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException("Cart item not found in this cart."));
+        items.remove(item);
+        item.detachFromCart();
     }
 
     public void markOrdered() {

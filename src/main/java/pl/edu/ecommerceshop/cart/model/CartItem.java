@@ -1,9 +1,7 @@
 package pl.edu.ecommerceshop.cart.model;
 
 import jakarta.persistence.*;
-
 import lombok.Getter;
-import lombok.Setter;
 import pl.edu.ecommerceshop.catalog.model.Product;
 import pl.edu.ecommerceshop.common.exception.BusinessException;
 
@@ -11,7 +9,6 @@ import java.math.BigDecimal;
 
 @Entity
 @Getter
-@Setter
 @Table(name = "cart_items")
 public class CartItem {
 
@@ -37,6 +34,12 @@ public class CartItem {
     }
 
     public CartItem(Cart cart, Product product, int quantity, BigDecimal unitPriceSnapshot) {
+        if (cart == null) {
+            throw new BusinessException("Cart cannot be null.");
+        }
+        if (product == null) {
+            throw new BusinessException("Product cannot be null.");
+        }
         if (quantity <= 0) {
             throw new BusinessException("Cart item quantity must be positive.");
         }
@@ -59,6 +62,10 @@ public class CartItem {
             throw new BusinessException("Cart item quantity must be positive.");
         }
         this.quantity = quantity;
+    }
+
+    void detachFromCart() {
+        this.cart = null;
     }
 
     public BigDecimal lineTotal() {
