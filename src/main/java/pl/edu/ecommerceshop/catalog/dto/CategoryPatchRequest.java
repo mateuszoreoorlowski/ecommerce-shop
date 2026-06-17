@@ -1,7 +1,6 @@
 package pl.edu.ecommerceshop.catalog.dto;
 
-public record CategoryResponse(
-        Long id,
+public record CategoryPatchRequest(
         String name,
         String slug
 ) {

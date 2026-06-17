@@ -1,4 +1,9 @@
 package pl.edu.ecommerceshop.cart.dto;
 
-public record UpdateCartItemRequest () {
+import jakarta.validation.constraints.Min;
+
+public record UpdateCartItemRequest(
+        @Min(1)
+        int quantity
+) {
 }

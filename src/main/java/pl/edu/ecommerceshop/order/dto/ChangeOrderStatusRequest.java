@@ -1,4 +1,10 @@
 package pl.edu.ecommerceshop.order.dto;
 
-public record ChangeOrderStatusRequest() {
+import jakarta.validation.constraints.NotNull;
+import pl.edu.ecommerceshop.order.model.OrderStatus;
+
+public record ChangeOrderStatusRequest(
+        @NotNull
+        OrderStatus status
+) {
 }
