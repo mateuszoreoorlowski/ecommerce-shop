@@ -61,3 +61,12 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+
+shopflow:
+  security:
+    admin:
+      username: ${SHOPFLOW_ADMIN_USERNAME:admin}
+      password: ${SHOPFLOW_ADMIN_PASSWORD:admin123}
+    customer:
+      username: ${SHOPFLOW_CUSTOMER_USERNAME:customer}
+      password: ${SHOPFLOW_CUSTOMER_PASSWORD:customer123}
