@@ -1,21 +1,24 @@
 package pl.edu.ecommerceshop.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.util.Collection;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -36,9 +39,12 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/categories").permitAll()
                         .requestMatchers(HttpMethod.GET, "/products", "/products/**").permitAll()
+
+                        .requestMatchers("/auth/me").authenticated()
 
                         .requestMatchers(HttpMethod.POST, "/carts").hasAnyRole("CUSTOMER", "ADMIN")
                         .requestMatchers("/carts/**").hasAnyRole("CUSTOMER", "ADMIN")
@@ -55,7 +61,8 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable);
 
@@ -63,24 +70,23 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(
-            PasswordEncoder passwordEncoder,
-            @Value("${shopflow.security.admin.username:admin}") String adminUsername,
-            @Value("${shopflow.security.admin.password:admin123}") String adminPassword,
-            @Value("${shopflow.security.customer.username:customer}") String customerUsername,
-            @Value("${shopflow.security.customer.password:customer123}") String customerPassword
-    ) {
-        UserDetails admin = User.withUsername(adminUsername)
-                .password(passwordEncoder.encode(adminPassword))
-                .roles("ADMIN")
-                .build();
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter = jwt -> {
+            List<String> roles = jwt.getClaimAsStringList("roles");
+            if (roles == null) {
+                return List.of();
+            }
 
-        UserDetails customer = User.withUsername(customerUsername)
-                .password(passwordEncoder.encode(customerPassword))
-                .roles("CUSTOMER")
-                .build();
+            return roles.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .map(GrantedAuthority.class::cast)
+                    .toList();
+        };
 
-        return new InMemoryUserDetailsManager(admin, customer);
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+        converter.setPrincipalClaimName("email");
+        return converter;
     }
 
     @Bean

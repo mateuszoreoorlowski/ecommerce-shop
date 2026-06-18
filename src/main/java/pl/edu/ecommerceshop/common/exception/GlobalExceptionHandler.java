@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -88,6 +89,18 @@ public class GlobalExceptionHandler {
         problem.setProperty("exception", exception.getClass().getSimpleName());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problem);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    ResponseEntity<ProblemDetail> handleBadCredentials(BadCredentialsException exception, HttpServletRequest request) {
+        ProblemDetail problem = baseProblem(
+                HttpStatus.UNAUTHORIZED,
+                "Authentication failed",
+                "Invalid email or password.",
+                request
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
     }
 
     private ProblemDetail baseProblem(HttpStatus status, String title, String detail, HttpServletRequest request) {

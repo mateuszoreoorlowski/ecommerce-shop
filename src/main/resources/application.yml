@@ -64,9 +64,14 @@ springdoc:
 
 shopflow:
   security:
-    admin:
-      username: ${SHOPFLOW_ADMIN_USERNAME:admin}
-      password: ${SHOPFLOW_ADMIN_PASSWORD:admin123}
-    customer:
-      username: ${SHOPFLOW_CUSTOMER_USERNAME:customer}
-      password: ${SHOPFLOW_CUSTOMER_PASSWORD:customer123}
+    jwt:
+      issuer: ${JWT_ISSUER:shopflow-backend}
+      secret: ${JWT_SECRET:shopflow-development-secret-change-me-32-bytes-minimum}
+      access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT1H}
+    default-users:
+      admin:
+        email: ${SHOPFLOW_ADMIN_EMAIL:admin@shopflow.local}
+        password: ${SHOPFLOW_ADMIN_PASSWORD:admin12345}
+      customer:
+        email: ${SHOPFLOW_CUSTOMER_EMAIL:customer@shopflow.local}
+        password: ${SHOPFLOW_CUSTOMER_PASSWORD:customer12345}
