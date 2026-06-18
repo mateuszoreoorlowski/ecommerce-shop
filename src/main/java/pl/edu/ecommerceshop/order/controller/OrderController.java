@@ -8,8 +8,11 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.ecommerceshop.common.dto.PageResponse;
+import pl.edu.ecommerceshop.common.security.SecurityUtils;
 import pl.edu.ecommerceshop.order.dto.ChangeOrderStatusRequest;
 import pl.edu.ecommerceshop.order.dto.CheckoutRequest;
 import pl.edu.ecommerceshop.order.dto.OrderResponse;
@@ -25,8 +28,12 @@ public class OrderController {
 
     @PostMapping("/checkout")
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse checkout(@Valid @RequestBody CheckoutRequest request) {
-        return orderService.checkoutOrder(request);
+    public OrderResponse checkout(@Valid @RequestBody CheckoutRequest request, @AuthenticationPrincipal Jwt jwt) {
+        return orderService.checkoutOrder(
+                request,
+                SecurityUtils.currentUserEmail(jwt),
+                SecurityUtils.isAdmin(jwt)
+        );
     }
 
     @GetMapping

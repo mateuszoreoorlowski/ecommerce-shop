@@ -5,7 +5,7 @@ import pl.edu.ecommerceshop.payment.dto.PaymentResponse;
 
 public interface PaymentService {
 
-    PaymentResponse processMockPayment(MockPaymentRequest request);
+    PaymentResponse processMockPayment(MockPaymentRequest request, String currentUserEmail, boolean admin);
 
-    PaymentResponse getByOrderId(Long orderId);
+    PaymentResponse getByOrderId(Long orderId, String currentUserEmail, boolean admin);
 }

@@ -29,4 +29,29 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
             WHERE c.id = :id AND c.status = :status
             """)
     Optional<Cart> findByIdAndStatusWithItemsAndProducts(@Param("id") Long id, @Param("status") CartStatus status);
+
+    @Query("""
+        SELECT DISTINCT c
+        FROM Cart c
+        LEFT JOIN FETCH c.items i
+        LEFT JOIN FETCH i.product
+        WHERE c.id = :id AND c.customerEmail = :customerEmail
+        """)
+    Optional<Cart> findByIdAndCustomerEmailWithItemsAndProducts(
+            @Param("id") Long id,
+            @Param("customerEmail") String customerEmail
+    );
+
+    @Query("""
+        SELECT DISTINCT c
+        FROM Cart c
+        LEFT JOIN FETCH c.items i
+        LEFT JOIN FETCH i.product
+        WHERE c.id = :id AND c.status = :status AND c.customerEmail = :customerEmail
+        """)
+    Optional<Cart> findByIdAndStatusAndCustomerEmailWithItemsAndProducts(
+            @Param("id") Long id,
+            @Param("status") CartStatus status,
+            @Param("customerEmail") String customerEmail
+    );
 }

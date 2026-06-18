@@ -48,8 +48,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public OrderResponse checkoutOrder(CheckoutRequest request) {
-        Cart cart = cartService.findActiveCart(request.cartId());
+    public OrderResponse checkoutOrder(CheckoutRequest request, String currentUserEmail, boolean admin) {
+        Cart cart = admin
+                ? cartService.findActiveCart(request.cartId())
+                : cartService.findActiveCart(request.cartId(), currentUserEmail);
         if (cart.getItems().isEmpty()) {
             throw new BusinessException("Cannot checkout an empty cart.");
         }
@@ -70,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
                 request.deliveryAddress().postalCode(),
                 request.deliveryAddress().country()
         );
-        Order order = new Order(orderNumber, request.customerName(), request.customerEmail(), request.customerPhone(), address);
+        Order order = new Order(orderNumber, request.customerName(), cart.getCustomerEmail(), request.customerPhone(), address);
 
         cart.getItems().stream()
                 .sorted(Comparator.comparing(item -> item.getProduct().getId()))

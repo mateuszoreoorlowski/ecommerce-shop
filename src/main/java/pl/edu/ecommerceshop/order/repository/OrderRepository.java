@@ -47,4 +47,15 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             WHERE o.id = :id
             """)
     Optional<Order> findByIdWithItems(@Param("id") Long id);
+
+    @Query("""
+        SELECT DISTINCT o
+        FROM Order o
+        LEFT JOIN FETCH o.items
+        WHERE o.id = :id AND o.customerEmail = :customerEmail
+        """)
+    Optional<Order> findByIdAndCustomerEmailWithItems(
+            @Param("id") Long id,
+            @Param("customerEmail") String customerEmail
+    );
 }

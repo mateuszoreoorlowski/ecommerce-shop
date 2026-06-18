@@ -19,6 +19,7 @@ import pl.edu.ecommerceshop.payment.model.Payment;
 import pl.edu.ecommerceshop.payment.model.PaymentStatus;
 import pl.edu.ecommerceshop.payment.repository.PaymentRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -32,11 +33,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Transactional
     @Override
-    public PaymentResponse processMockPayment(MockPaymentRequest request) {
-        Order order = orderRepository.findByIdWithItems(request.orderId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Order with id %d not found.".formatted(request.orderId())
-                ));
+    public PaymentResponse processMockPayment(MockPaymentRequest request, String currentUserEmail, boolean admin) {
+        Order order = findOrderForPayment(request.orderId(), currentUserEmail, admin);
 
         if (order.getStatus() != OrderStatus.NEW) {
             throw new BusinessException("Only new orders can be paid.");
@@ -67,9 +65,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Transactional(readOnly = true)
     @Override
-    public PaymentResponse getByOrderId(Long orderId) {
-        Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Payment for order id %d not found.".formatted(orderId)));
+    public PaymentResponse getByOrderId(Long orderId, String currentUserEmail, boolean admin) {
+        Payment payment = findPaymentForOrder(orderId, currentUserEmail, admin)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Payment for order id %d not found.".formatted(orderId)
+                ));
+
         return PaymentMapper.toResponse(payment);
     }
 
@@ -91,5 +92,35 @@ public class PaymentServiceImpl implements PaymentService {
             stockMovementRepository.save(new StockMovement(product.getId(), product.getSku(), StockMovementType.RESERVATION_RELEASED,
                     item.getQuantity(), "Reservation released after failed payment", order.getOrderNumber()));
         });
+    }
+
+    private Order findOrderForPayment(Long orderId, String currentUserEmail, boolean admin) {
+        if (admin) {
+            return orderRepository.findByIdWithItems(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Order with id %d not found.".formatted(orderId)
+                    ));
+        }
+
+        return orderRepository.findByIdAndCustomerEmailWithItems(orderId, normalizeEmail(currentUserEmail))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Order with id %d not found.".formatted(orderId)
+                ));
+    }
+
+    private Optional<Payment> findPaymentForOrder(Long orderId, String currentUserEmail, boolean admin) {
+        if (admin) {
+            return paymentRepository.findByOrderId(orderId);
+        }
+
+        return paymentRepository.findByOrderIdAndCustomerEmail(orderId, normalizeEmail(currentUserEmail));
+    }
+
+    private String normalizeEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new BusinessException("Customer email cannot be blank.");
+        }
+
+        return email.trim().toLowerCase();
     }
 }

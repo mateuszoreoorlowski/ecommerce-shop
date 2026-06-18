@@ -39,7 +39,11 @@ public class Cart {
     }
 
     public Cart(String customerEmail) {
-        this.customerEmail = customerEmail;
+        if (customerEmail == null || customerEmail.isBlank()) {
+            throw new BusinessException("Customer email cannot be blank.");
+        }
+
+        this.customerEmail = customerEmail.trim().toLowerCase();
         this.status = CartStatus.ACTIVE;
     }
 

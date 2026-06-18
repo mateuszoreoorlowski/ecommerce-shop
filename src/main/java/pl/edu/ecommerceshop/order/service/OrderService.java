@@ -10,7 +10,7 @@ import pl.edu.ecommerceshop.order.model.OrderStatus;
 
 public interface OrderService {
 
-    OrderResponse checkoutOrder(CheckoutRequest request);
+    OrderResponse checkoutOrder(CheckoutRequest request, String currentUserEmail, boolean admin);
 
     PageResponse<OrderResponse> getOrdersList(OrderStatus status, Pageable pageable);
 
