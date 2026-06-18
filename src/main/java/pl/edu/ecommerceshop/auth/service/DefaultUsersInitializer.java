@@ -18,11 +18,17 @@ public class DefaultUsersInitializer implements ApplicationRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${shopflow.security.default-users.admin.username:admin}")
+    private String adminUsername;
+
     @Value("${shopflow.security.default-users.admin.email:admin@shopflow.local}")
     private String adminEmail;
 
     @Value("${shopflow.security.default-users.admin.password:admin12345}")
     private String adminPassword;
+
+    @Value("${shopflow.security.default-users.customer.username:customer}")
+    private String customerUsername;
 
     @Value("${shopflow.security.default-users.customer.email:customer@shopflow.local}")
     private String customerEmail;
@@ -33,22 +39,24 @@ public class DefaultUsersInitializer implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        createUserIfMissing(adminEmail, adminPassword, "System", "Admin", UserRole.ADMIN);
-        createUserIfMissing(customerEmail, customerPassword, "Test", "Customer", UserRole.CUSTOMER);
+        createUserIfMissing(adminUsername, adminEmail, adminPassword, "System", "Admin", UserRole.ADMIN);
+        createUserIfMissing(customerUsername, customerEmail, customerPassword, "Test", "Customer", UserRole.CUSTOMER);
     }
 
     private void createUserIfMissing(
+            String username,
             String email,
             String rawPassword,
             String firstName,
             String lastName,
             UserRole role
     ) {
-        if (userRepository.existsByEmailIgnoreCase(email)) {
+        if (userRepository.existsByEmailIgnoreCase(email) || userRepository.existsByUsernameIgnoreCase(username)) {
             return;
         }
 
         User user = new User(
+                username,
                 email,
                 passwordEncoder.encode(rawPassword),
                 firstName,

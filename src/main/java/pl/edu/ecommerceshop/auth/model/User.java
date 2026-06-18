@@ -15,6 +15,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, length = 80)
+    private String username;
+
     @Column(nullable = false, unique = true, length = 180)
     private String email;
 
@@ -43,7 +46,17 @@ public class User {
     protected User() {
     }
 
-    public User(String email, String passwordHash, String firstName, String lastName, UserRole role) {
+    public User(
+            String username,
+            String email,
+            String passwordHash,
+            String firstName,
+            String lastName,
+            UserRole role
+    ) {
+        if (username == null || username.isBlank()) {
+            throw new BusinessException("Username cannot be blank.");
+        }
         if (email == null || email.isBlank()) {
             throw new BusinessException("User email cannot be blank.");
         }
@@ -60,6 +73,7 @@ public class User {
             throw new BusinessException("User role cannot be null.");
         }
 
+        this.username = normalizeUsername(username);
         this.email = normalizeEmail(email);
         this.passwordHash = passwordHash;
         this.firstName = firstName.trim();
@@ -104,6 +118,10 @@ public class User {
 
     public String roleAuthority() {
         return "ROLE_" + role.name();
+    }
+
+    private String normalizeUsername(String username) {
+        return username.trim().toLowerCase();
     }
 
     private String normalizeEmail(String email) {

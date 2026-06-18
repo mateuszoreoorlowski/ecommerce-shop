@@ -3,9 +3,9 @@ spring:
     name: shopflow-backend
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:54324/shopflow}
-    username: ${DB_USERNAME:shopflow}
-    password: ${DB_PASSWORD:shopflow}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -25,9 +25,9 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:63793}
-      password: "${REDIS_PASSWORD:}"
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: "${REDIS_PASSWORD}"
       timeout: 2s
 
   cache:
@@ -37,6 +37,18 @@ spring:
       use-key-prefix: true
       cache-null-values: false
       time-to-live: 10m
+
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: "${MAIL_PASSWORD}"
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS}
 
   threads:
     virtual:
@@ -48,7 +60,7 @@ spring:
       include-binding-errors: never
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT}
 
 management:
   endpoints:
@@ -65,13 +77,23 @@ springdoc:
 shopflow:
   security:
     jwt:
-      issuer: ${JWT_ISSUER:shopflow-backend}
-      secret: ${JWT_SECRET:shopflow-development-secret-change-me-32-bytes-minimum}
-      access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT1H}
+      issuer: ${JWT_ISSUER}
+      secret: ${JWT_SECRET}
+      access-token-ttl: ${JWT_ACCESS_TOKEN_TTL}
+
+    login-code:
+      ttl: ${LOGIN_CODE_TTL}
+      max-attempts: ${LOGIN_CODE_MAX_ATTEMPTS}
+      email:
+        enabled: ${LOGIN_CODE_EMAIL_ENABLED}
+        from: ${LOGIN_CODE_EMAIL_FROM}
+
     default-users:
       admin:
-        email: ${SHOPFLOW_ADMIN_EMAIL:admin@shopflow.local}
-        password: ${SHOPFLOW_ADMIN_PASSWORD:admin12345}
+        username: ${SHOPFLOW_ADMIN_USERNAME}
+        email: ${SHOPFLOW_ADMIN_EMAIL}
+        password: ${SHOPFLOW_ADMIN_PASSWORD}
       customer:
-        email: ${SHOPFLOW_CUSTOMER_EMAIL:customer@shopflow.local}
-        password: ${SHOPFLOW_CUSTOMER_PASSWORD:customer12345}
+        username: ${SHOPFLOW_CUSTOMER_USERNAME}
+        email: ${SHOPFLOW_CUSTOMER_EMAIL}
+        password: ${SHOPFLOW_CUSTOMER_PASSWORD}

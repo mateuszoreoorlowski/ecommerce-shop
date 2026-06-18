@@ -20,18 +20,19 @@ public class ShopflowUserDetailsService implements UserDetailsService {
 
     @Transactional(readOnly = true)
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        pl.edu.ecommerceshop.auth.model.User user = userRepository.findByEmailIgnoreCase(email)
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        String normalizedIdentifier = identifier.trim().toLowerCase();
+
+        pl.edu.ecommerceshop.auth.model.User user = userRepository.findByEmailIgnoreCase(normalizedIdentifier)
+                .or(() -> userRepository.findByUsernameIgnoreCase(normalizedIdentifier))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found."));
 
-        return new User(
-                user.getEmail(),
-                user.getPasswordHash(),
-                user.isActive(),
-                true,
-                true,
-                true,
-                List.of(new SimpleGrantedAuthority(user.roleAuthority()))
-        );
+        return User.withUsername(user.getEmail())
+                .password(user.getPasswordHash())
+                .authorities(List.of(new SimpleGrantedAuthority(user.roleAuthority())))
+                .disabled(!user.isActive())
+                .accountExpired(false)
+                .credentialsExpired(false)
+                .build();
     }
 }
