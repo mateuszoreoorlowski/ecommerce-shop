@@ -8,6 +8,7 @@ public record ProductResponse(
         String sku,
         String name,
         String description,
+        String imageUrl,
         BigDecimal price,
         int stockQuantity,
         int reservedQuantity,

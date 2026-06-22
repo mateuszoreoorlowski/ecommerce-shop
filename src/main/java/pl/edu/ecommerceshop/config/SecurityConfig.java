@@ -65,6 +65,9 @@ public class SecurityConfig {
                         .requestMatchers("/products", "/products/**").hasRole("ADMIN")
                         .requestMatchers("/stock-movements", "/stock-movements/**").hasRole("ADMIN")
 
+                        .requestMatchers(HttpMethod.POST, "/products/with-image").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/products/*/with-image").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))

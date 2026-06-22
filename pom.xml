@@ -21,6 +21,7 @@
     <properties>
         <java.version>25</java.version>
         <springdoc.version>3.0.3</springdoc.version>
+        <aws.sdk.version>2.46.13</aws.sdk.version>
     </properties>
 
     <dependencies>
@@ -127,6 +128,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>${aws.sdk.version}</version>
         </dependency>
     </dependencies>
 

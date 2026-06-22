@@ -97,3 +97,16 @@ shopflow:
         username: ${SHOPFLOW_CUSTOMER_USERNAME}
         email: ${SHOPFLOW_CUSTOMER_EMAIL}
         password: ${SHOPFLOW_CUSTOMER_PASSWORD}
+  assets:
+    cdn-base-url: ${SHOPFLOW_CDN_BASE_URL}
+    r2:
+      endpoint: ${CLOUDFLARE_R2_ENDPOINT}
+      bucket: ${CLOUDFLARE_R2_BUCKET}
+      access-key-id: ${CLOUDFLARE_R2_ACCESS_KEY_ID}
+      secret-access-key: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY}
+      products-prefix: ${CLOUDFLARE_R2_PRODUCTS_PREFIX}
+      max-image-size-bytes: ${CLOUDFLARE_R2_MAX_IMAGE_SIZE_BYTES}
+      allowed-content-types:
+        - image/jpeg
+        - image/png
+        - image/webp

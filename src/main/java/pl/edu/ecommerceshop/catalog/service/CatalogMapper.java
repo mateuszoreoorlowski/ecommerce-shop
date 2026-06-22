@@ -20,6 +20,7 @@ public final class CatalogMapper {
                 product.getSku(),
                 product.getName(),
                 product.getDescription(),
+                product.getImageUrl(),
                 product.getPrice(),
                 product.getStockQuantity(),
                 product.getReservedQuantity(),

@@ -1,10 +1,11 @@
 package pl.edu.ecommerceshop.catalog.dto;
 
 import jakarta.validation.constraints.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 
-public record ProductCreateRequest(
+public record ProductCreateMultipartRequest(
         @NotBlank
         @Size(max = 80)
         String sku,
@@ -17,17 +18,19 @@ public record ProductCreateRequest(
         @Size(max = 2000)
         String description,
 
-        @Size(max = 2048)
-        String imageUrl,
-
         @NotNull
         @DecimalMin(value = "0.01")
         BigDecimal price,
 
+        @NotNull
         @Min(0)
-        int stockQuantity,
+        Integer stockQuantity,
 
         @NotNull
-        Long categoryId
+        Long categoryId,
+
+        @NotNull
+        MultipartFile image
+
 ) {
 }

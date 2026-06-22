@@ -25,6 +25,9 @@ public class Product {
     @Column(nullable = false, length = 2000)
     private String description;
 
+    @Column(length = 2048)
+    private String imageUrl;
+
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal price;
 
@@ -54,16 +57,19 @@ public class Product {
     protected Product() {
     }
 
-    public Product(String sku, String name, String description, BigDecimal price, int stockQuantity, Category category) {
+    public Product(String sku, String name, String description, String imageUrl, BigDecimal price, int stockQuantity, Category category ) {
         if (stockQuantity < 0) {
             throw new BusinessException("Initial stock cannot be negative.");
         }
+
         if (category == null) {
             throw new BusinessException("Product category cannot be null.");
         }
+
         this.sku = sku;
         this.name = name;
         this.description = description;
+        this.imageUrl = imageUrl;
         this.price = price;
         this.stockQuantity = stockQuantity;
         this.reservedQuantity = 0;
@@ -83,19 +89,27 @@ public class Product {
         this.updatedAt = Instant.now();
     }
 
-    public void updateDetails(String name, String description, BigDecimal price, Boolean active, Category category) {
+    public void updateDetails(String name, String description, String imageUrl, BigDecimal price, Boolean active, Category category) {
         if (name != null) {
             this.name = name;
         }
+
         if (description != null) {
             this.description = description;
         }
+
+        if (imageUrl != null) {
+            this.imageUrl = imageUrl.isBlank() ? null : imageUrl;
+        }
+
         if (price != null) {
             this.price = price;
         }
+
         if (active != null) {
             this.active = active;
         }
+
         if (category != null) {
             this.category = category;
         }
