@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import pl.edu.ecommerceshop.catalog.dto.*;
 import pl.edu.ecommerceshop.catalog.service.ProductService;
 import pl.edu.ecommerceshop.common.dto.PageResponse;
+import pl.edu.ecommerceshop.common.events.DomainEventPublisher;
+import pl.edu.ecommerceshop.common.events.ProductViewedEvent;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,6 +22,8 @@ import pl.edu.ecommerceshop.common.dto.PageResponse;
 public class ProductController {
 
     private final ProductService productService;
+    private final DomainEventPublisher domainEventPublisher;
+
 
     @GetMapping
     @Operation(summary = "Get products list", description = "Returns paginated and filtered product list.")
@@ -40,8 +44,12 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ProductResponse get(@PathVariable Long id) {
-        return productService.getProductById(id);
+    public ProductResponse getById(@PathVariable Long id) {
+        ProductResponse response = productService.getProductById(id);
+
+        domainEventPublisher.publish(new ProductViewedEvent(id));
+
+        return response;
     }
 
     @Operation(

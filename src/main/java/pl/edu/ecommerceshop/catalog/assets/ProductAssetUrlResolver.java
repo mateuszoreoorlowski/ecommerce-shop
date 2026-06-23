@@ -2,7 +2,7 @@ package pl.edu.ecommerceshop.catalog.assets;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import pl.edu.ecommerceshop.config.AssetsProperties;
+import pl.edu.ecommerceshop.configuration.properties.AssetsProperties;
 
 @Component
 @RequiredArgsConstructor

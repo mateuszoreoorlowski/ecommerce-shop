@@ -113,3 +113,7 @@ shopflow:
   rate-limiting:
     enabled: ${SHOPFLOW_RATE_LIMITING_ENABLED}
     redis-key-prefix: ${SHOPFLOW_RATE_LIMITING_REDIS_KEY_PREFIX}
+  events:
+    redis-stream:
+      enabled: ${SHOPFLOW_EVENTS_REDIS_STREAM_ENABLED}
+      key: ${SHOPFLOW_EVENTS_REDIS_STREAM_KEY}

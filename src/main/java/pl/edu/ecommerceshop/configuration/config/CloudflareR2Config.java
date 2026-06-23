@@ -1,8 +1,9 @@
-package pl.edu.ecommerceshop.config;
+package pl.edu.ecommerceshop.configuration.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import pl.edu.ecommerceshop.configuration.properties.CloudflareR2Properties;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;

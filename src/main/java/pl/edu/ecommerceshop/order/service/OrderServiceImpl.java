@@ -12,6 +12,8 @@ import pl.edu.ecommerceshop.cart.service.CartService;
 import pl.edu.ecommerceshop.catalog.model.Product;
 import pl.edu.ecommerceshop.catalog.repository.ProductRepository;
 import pl.edu.ecommerceshop.common.dto.PageResponse;
+import pl.edu.ecommerceshop.common.events.DomainEventPublisher;
+import pl.edu.ecommerceshop.common.events.OrderCreatedEvent;
 import pl.edu.ecommerceshop.common.exception.BusinessException;
 import pl.edu.ecommerceshop.common.exception.ResourceNotFoundException;
 import pl.edu.ecommerceshop.inventory.model.StockMovement;
@@ -45,6 +47,7 @@ public class OrderServiceImpl implements OrderService {
     private final StockMovementRepository stockMovementRepository;
     private final CartService cartService;
     private final OrderNumberGenerator orderNumberGenerator;
+    private final DomainEventPublisher domainEventPublisher;
 
     @Transactional
     @Override
@@ -86,6 +89,16 @@ public class OrderServiceImpl implements OrderService {
 
         cart.markOrdered();
         Order saved = orderRepository.save(order);
+
+        domainEventPublisher.publish(
+                new OrderCreatedEvent(
+                        saved.getId(),
+                        saved.getOrderNumber(),
+                        saved.getCustomerEmail(),
+                        saved.getTotalPrice()
+                )
+        );
+
         return OrderMapper.mapToOrderResponse(saved);
     }
 

@@ -16,9 +16,9 @@ import pl.edu.ecommerceshop.common.exception.ResourceNotFoundException;
 
 import java.util.List;
 
-import static pl.edu.ecommerceshop.config.RedisCacheConfig.CATEGORIES_CACHE;
-import static pl.edu.ecommerceshop.config.RedisCacheConfig.PRODUCTS_CACHE;
-import static pl.edu.ecommerceshop.config.RedisCacheConfig.PRODUCT_CACHE;
+import static pl.edu.ecommerceshop.configuration.config.RedisCacheConfig.CATEGORIES_CACHE;
+import static pl.edu.ecommerceshop.configuration.config.RedisCacheConfig.PRODUCTS_CACHE;
+import static pl.edu.ecommerceshop.configuration.config.RedisCacheConfig.PRODUCT_CACHE;
 
 @Service
 @RequiredArgsConstructor

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import pl.edu.ecommerceshop.common.exception.BusinessException;
-import pl.edu.ecommerceshop.config.CloudflareR2Properties;
+import pl.edu.ecommerceshop.configuration.properties.CloudflareR2Properties;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;

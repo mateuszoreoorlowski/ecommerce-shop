@@ -1,4 +1,4 @@
-package pl.edu.ecommerceshop.config;
+package pl.edu.ecommerceshop.configuration.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

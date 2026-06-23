@@ -11,6 +11,8 @@ import pl.edu.ecommerceshop.cart.model.CartStatus;
 import pl.edu.ecommerceshop.cart.repository.CartRepository;
 import pl.edu.ecommerceshop.catalog.model.Product;
 import pl.edu.ecommerceshop.catalog.repository.ProductRepository;
+import pl.edu.ecommerceshop.common.events.DomainEventPublisher;
+import pl.edu.ecommerceshop.common.events.ProductAddedToCartEvent;
 import pl.edu.ecommerceshop.common.exception.BusinessException;
 import pl.edu.ecommerceshop.common.exception.ResourceNotFoundException;
 
@@ -20,6 +22,7 @@ public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
+    private final DomainEventPublisher domainEventPublisher;
 
     @Transactional
     @Override
@@ -50,7 +53,19 @@ public class CartServiceImpl implements CartService {
         }
 
         cart.addItem(product, request.quantity());
-        return CartMapper.mapToCartResponse(cart);
+
+        Cart savedCart = cartRepository.save(cart);
+
+        domainEventPublisher.publish(
+                new ProductAddedToCartEvent(
+                        savedCart.getId(),
+                        product.getId(),
+                        request.quantity(),
+                        savedCart.getCustomerEmail()
+                )
+        );
+
+        return CartMapper.mapToCartResponse(savedCart);
     }
 
     @Transactional

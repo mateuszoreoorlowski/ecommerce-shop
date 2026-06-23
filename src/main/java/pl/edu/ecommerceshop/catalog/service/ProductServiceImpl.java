@@ -22,8 +22,8 @@ import pl.edu.ecommerceshop.inventory.model.StockMovement;
 import pl.edu.ecommerceshop.inventory.model.StockMovementType;
 import pl.edu.ecommerceshop.inventory.repository.StockMovementRepository;
 
-import static pl.edu.ecommerceshop.config.RedisCacheConfig.PRODUCTS_CACHE;
-import static pl.edu.ecommerceshop.config.RedisCacheConfig.PRODUCT_CACHE;
+import static pl.edu.ecommerceshop.configuration.config.RedisCacheConfig.PRODUCTS_CACHE;
+import static pl.edu.ecommerceshop.configuration.config.RedisCacheConfig.PRODUCT_CACHE;
 
 @Service
 @RequiredArgsConstructor
