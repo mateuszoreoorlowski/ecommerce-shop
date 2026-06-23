@@ -1,9 +1,10 @@
-package pl.edu.ecommerceshop.analytics;
+package pl.edu.ecommerceshop.analytics.helper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import pl.edu.ecommerceshop.analytics.service.AnalyticsService;
 import pl.edu.ecommerceshop.common.events.*;
 
 @Component

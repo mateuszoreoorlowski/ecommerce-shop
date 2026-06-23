@@ -1,10 +1,11 @@
-package pl.edu.ecommerceshop.analytics;
+package pl.edu.ecommerceshop.analytics.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import pl.edu.ecommerceshop.analytics.helper.AnalyticsKeys;
 
 import java.math.BigDecimal;
 
@@ -28,7 +29,7 @@ public class AnalyticsService {
         }
 
         execute(redis -> redis.opsForZSet().incrementScore(
-                PRODUCT_VIEWS_KEY,
+                AnalyticsKeys.PRODUCT_VIEWS,
                 String.valueOf(productId),
                 1
         ));
@@ -40,23 +41,23 @@ public class AnalyticsService {
         }
 
         execute(redis -> redis.opsForZSet().incrementScore(
-                CART_ADDS_KEY,
+                AnalyticsKeys.CART_ADDS,
                 String.valueOf(productId),
                 quantity
         ));
     }
 
     public void recordOrderCreated() {
-        execute(redis -> redis.opsForValue().increment(ORDERS_CREATED_KEY));
+        execute(redis -> redis.opsForValue().increment(AnalyticsKeys.ORDERS_CREATED));
     }
 
     public void recordPaymentCompleted(BigDecimal amount) {
         execute(redis -> {
-            redis.opsForValue().increment(PAYMENTS_COMPLETED_KEY);
+            redis.opsForValue().increment(AnalyticsKeys.PAYMENTS_COMPLETED);
 
             if (amount != null && amount.signum() > 0) {
                 redis.opsForValue().increment(
-                        PAYMENT_REVENUE_KEY,
+                        AnalyticsKeys.PAYMENT_REVENUE,
                         amount.doubleValue()
                 );
             }
@@ -64,7 +65,7 @@ public class AnalyticsService {
     }
 
     public void recordPaymentFailed() {
-        execute(redis -> redis.opsForValue().increment(PAYMENTS_FAILED_KEY));
+        execute(redis -> redis.opsForValue().increment(AnalyticsKeys.PAYMENTS_FAILED));
     }
 
     private void execute(RedisOperation operation) {
