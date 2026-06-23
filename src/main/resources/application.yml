@@ -110,3 +110,6 @@ shopflow:
         - image/jpeg
         - image/png
         - image/webp
+  rate-limiting:
+    enabled: ${SHOPFLOW_RATE_LIMITING_ENABLED}
+    redis-key-prefix: ${SHOPFLOW_RATE_LIMITING_REDIS_KEY_PREFIX}
