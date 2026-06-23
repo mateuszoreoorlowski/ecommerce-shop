@@ -23,6 +23,10 @@ public class AnalyticsService {
     private final ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider;
 
     public void recordProductView(Long productId) {
+        if (productId == null) {
+            return;
+        }
+
         execute(redis -> redis.opsForZSet().incrementScore(
                 PRODUCT_VIEWS_KEY,
                 String.valueOf(productId),
@@ -31,6 +35,10 @@ public class AnalyticsService {
     }
 
     public void recordProductAddedToCart(Long productId, int quantity) {
+        if (productId == null || quantity <= 0) {
+            return;
+        }
+
         execute(redis -> redis.opsForZSet().incrementScore(
                 CART_ADDS_KEY,
                 String.valueOf(productId),
@@ -46,7 +54,7 @@ public class AnalyticsService {
         execute(redis -> {
             redis.opsForValue().increment(PAYMENTS_COMPLETED_KEY);
 
-            if (amount != null) {
+            if (amount != null && amount.signum() > 0) {
                 redis.opsForValue().increment(
                         PAYMENT_REVENUE_KEY,
                         amount.doubleValue()
